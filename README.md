@@ -6,6 +6,19 @@
 
 
 
+### :soon: Version History
+
+- ProtoType_ver_0.1(2022.07.09)
+  - jupyter notebook
+  - basic ML model used
+  - Data : webtoon - 590 / Actor - 227
+- ProtoType_ver_0.2(2022.07.30 coming soon)
+  - modularity
+  - inhanced ML model used
+  - Data : webtoon - 590 / Actor - 1927
+
+
+
 ## :mag_right:프로젝트 개요
 
 
