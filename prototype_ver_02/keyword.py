@@ -75,7 +75,17 @@ class Keyword:
         
         return keyword
         
-    
+    def keyword_similarity(self, keyword_1, keyword_2):
+        '''키워드 간 유사성 비교'''
+        keyword_1 = keyword_1.split(', ')
+        keyword_2 = keyword_2.split(', ')
+        embedding_keyword_1 = self.model.wv.get_mean_vector(keyword_1).reshape(1, -1)
+        embedding_keyword_2 = self.model.wv.get_mean_vector(keyword_2).reshape(1, -1)
+        
+        keyword_sim = cosine_similarity(embedding_keyword_1, embedding_keyword_2)[0][0]
+        
+        return keyword_sim
+        
     def run(self, df, col_content='content', col_keywords='keywords'):
         '''전체 실행'''
         sentence_list = df[col_content].to_list()

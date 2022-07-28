@@ -49,18 +49,18 @@ class RN50:
         '''
         if GRAY:
             if TYPE == 0: # form : cv2 -> PIL
-                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-                image = Image.fromarray(image)
-            elif TYPE == 1: # form : PIL -> cv2
-                image = np.array(image)
-                image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-        else:
-            if TYPE == 0: # form : cv2 -> PIL
                 image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
                 image = Image.fromarray(image)
             elif TYPE == 1: # form : PIL -> cv2
                 image = np.array(image)
                 image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+        else:
+            if TYPE == 0: # form : cv2 -> PIL
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                image = Image.fromarray(image)
+            elif TYPE == 1: # form : PIL -> cv2
+                image = np.array(image)
+                image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         
         return image
     
