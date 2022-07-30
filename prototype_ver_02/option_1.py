@@ -40,7 +40,7 @@ class User:
         fig_row = len(character_list) // 3 + 1
 
         print(f"\n{'=' * 26} 등장 인물 선택 {'=' * 26}")
-        plt.figure(figsize=(10, 5))
+        plt.figure(figsize=(10, 5 * fig_row))
         for i in range(len(character_list)):
             try:
                 print(f'{i + 1}. {character_list[i]}')
@@ -106,7 +106,10 @@ class User:
             try:
                 actor_image = image.load_img(f'./image_data/Actor2webtoon/webtoon_{actor_name}_{actor_age}_{actor_sex}.jpg', target_size=(224, 224))
             except:
-                actor_image = image.load_img(f'./image_data/Actor/{actor_name}_{actor_age}_{actor_sex}.jpg', target_size=(224, 224))
+                try:
+                    actor_image = image.load_img(f'./image_data/Actor/{actor_name}_{actor_age}_{actor_sex}.jpg', target_size=(224, 224))
+                except:
+                    print(f'{actor_name}_{actor_age}_{actor_sex} 사진 없음')
             
             keyword_score = self.keyword_score_df[(self.keyword_score_df['Title']==select_title) & 
                                  (self.keyword_score_df['Name']==select_character)][f'{actor_name}_{actor_age}_{actor_sex}'].values[0]

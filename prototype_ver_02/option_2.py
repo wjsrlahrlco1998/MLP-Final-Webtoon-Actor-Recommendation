@@ -50,7 +50,7 @@ class User:
         
         while state:
             print(f"\n{'=' * 26} 등장 인물 선택 {'=' * 26}")
-            plt.figure(figsize=(10, 5))
+            plt.figure(figsize=(10, 5 * fig_row))
             for i in range(len(character_list)):
                 try:
                     print(f'{i + 1}. {character_list[i]}')
