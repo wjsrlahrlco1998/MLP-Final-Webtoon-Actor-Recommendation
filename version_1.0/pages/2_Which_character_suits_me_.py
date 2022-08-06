@@ -24,6 +24,7 @@ def radar_chart(age_score, keyword_score, image_score, rank=0, famous=0):
            '랭킹', '유명도']))
     fig = px.line_polar(df, r='r', theta='theta', line_close=True, range_r =(0, 100))
     st.write(fig)
+
 # Handling session state
 def init_session():
     st.session_state['session_1'] = 0
