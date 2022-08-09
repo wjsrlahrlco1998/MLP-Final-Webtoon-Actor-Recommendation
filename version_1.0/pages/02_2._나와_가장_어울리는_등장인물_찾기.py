@@ -9,29 +9,29 @@ from PIL import Image
 from keras.preprocessing import image as keras_image
 
 # AI Model Module Load
-from image_modules import image_similarity, image_visualization, convert_image_to_anime
+from image_modules import AutoEncoder_2D, image_visualization, convert_image_to_anime
 from text_modules import text_similarity
 
 # Define radar_chart
-def radar_chart(age_score, keyword_score, image_score, rank=0, famous=0):
+def radar_chart(age_score, keyword_score, image_score, harmony, sex_score=100):
     df = pd.DataFrame(dict(
     r=[age_score,
        keyword_score,
        image_score,
-       rank,
-       famous],
+       harmony,
+       sex_score],
     theta=['나이','키워드 유사도','이미지 유사도',
-           '랭킹', '유명도']))
+           '조화', '성별']))
     fig = px.line_polar(df, r='r', theta='theta', line_close=True, range_r =(0, 100))
     st.write(fig)
 
 # Handling session state
 def init_session():
     st.session_state['session_1'] = 0
-
+    
 # Load AI Model from session
 model_keyword = st.session_state['model_keyword']
-model_rs50 = st.session_state['model_rs50']
+model_AE = st.session_state['model_AE']
 model_animeGan = st.session_state['model_animeGan']
 model_orb = st.session_state['model_orb']
 
@@ -39,15 +39,34 @@ model_orb = st.session_state['model_orb']
 webtoon_df = st.session_state['webtoon_df']
 
 # Page
-st.title("나와 어울리는 웹툰 등장인물은??")
+st.markdown("## 🙋‍♂️나와 어울리는 등장인물 찾기")
+st.sidebar.markdown("# 🛠기능설명")
+st.sidebar.markdown("**나와 가장 어울리는 등장인물 찾기 기능**은 나의 사진과 정보를 입력하면 나와 가장 어울리는 웹툰의 등장인물을 추천해주는 기능입니다. 비교할 등장인물은 총 470개입니다.")
+st.sidebar.markdown("# 📋사용설명")
+st.sidebar.markdown("""1. 자신의 얼굴이 잘 나온 사진을 업로드하세요.
+2. 사진의 이름을 입력하세요.
+3. 나이를 입력하세요.
+4. 성별을 고르세요.
+5. 키워드를 ', '를 구분자로하여 입력하세요.
+6. 추천받을 등장인물의 수를 지정해주세요.
+7. '1'~'6'의 과정이 끝났으면 **비교하기** 버튼을 클릭하세요.
+8. '이전'과 '다음'버튼을 통해서 추천된 등장인물을 확인하세요.""")
 
 with st.form('form_1', clear_on_submit=False):
-    upload_image_bytes = st.file_uploader("1. 사진을 업로드하세요.", type='jpg', accept_multiple_files=False)
+    upload_image_bytes = st.file_uploader("1. 사진을 업로드하세요.", type=['jpg', 'png'], accept_multiple_files=False)
     upload_image_name = st.text_input("2. 사진 이름을 입력하세요.", placeholder="여기에 입력하세요.")
     upload_image_age = st.number_input("3. 나이를 입력하세요.", min_value=0, max_value=120, value=25)
-    upload_image_sex = st.radio("4. 성별을 고르세요.", ('남', '여'), horizontal=True)
+    upload_image_sex = st.radio("4. 성별을 고르세요.", ('남', '여', '상관없음'), horizontal=True)
     upload_image_keyword = st.text_input("5. 키워드를 입력하세요.", placeholder="구분자는 ', '입니다.")
-    character_n = st.slider("6. 확인할 등장인물의 수를 설정하세요!!", 0, len(webtoon_df), 0)
+    submitted_0 = st.form_submit_button('입력완료', on_click=init_session)
+    if submitted_0:
+        st.success("성공적으로 입력되었습니다.")
+
+with st.form('form_3', clear_on_submit=False):
+    if (upload_image_sex == "남") or (upload_image_sex == "여"):
+        character_n = st.slider("6. 확인할 등장인물의 수를 설정하세요!!", 0, len(webtoon_df[webtoon_df["Sex"]==upload_image_sex]), 0)
+    else:
+        character_n = st.slider("6. 확인할 등장인물의 수를 설정하세요!!", 0, len(webtoon_df), 0)
     submitted_1 = st.form_submit_button('비교하기', on_click=init_session)
 
 try:
@@ -60,8 +79,10 @@ try:
             st.session_state['recommend_n'] = character_n
 
             character_list = []
-
-            filtered_webtoon_df = webtoon_df[webtoon_df["Sex"]==upload_image_sex].reset_index(drop=True)
+            if (upload_image_sex == "남") or (upload_image_sex == "여"):
+                filtered_webtoon_df = webtoon_df[webtoon_df["Sex"]==upload_image_sex].reset_index(drop=True)
+            else:
+                filtered_webtoon_df = webtoon_df.copy()
 
             recommend_bar = st.progress(0)
             for idx in range(len(filtered_webtoon_df)):
@@ -85,7 +106,9 @@ try:
                 else:
                     age_score = upload_image_age / character_age
                 keyword_score = model_keyword.get_keyword_similarity(upload_image_keyword, character_keyword)
-                image_score = model_rs50.run(anime_user_image, character_image)
+                image_score = (model_AE.run(anime_user_image, character_image) - 0.7) / 0.3
+                if image_score < 0:
+                    image_score = 0
                 total_score = (keyword_score * 0.2) + (image_score * 0.7) + (age_score * 0.1)
 
                 character_dict["Title"] = webtoon_title
@@ -116,7 +139,8 @@ if st.session_state['character_list']:
                 st.session_state['session_1'] -= 1
             elif submitted_3 and (int(st.session_state['session_1']) < st.session_state['recommend_n'] - 1):
                 st.session_state['session_1'] += 1
-                
+    orb_control = st.radio("매칭 지점확인", ["On", 'Off'], horizontal=True, index = 1)
+    
     character_list = st.session_state["character_list"]
     webtoon_title = character_list[st.session_state["session_1"]]["Title"]
     character_name = character_list[st.session_state["session_1"]]["Name"]
@@ -132,8 +156,11 @@ if st.session_state['character_list']:
     cv2_upload_image = cv2.resize(cv2_upload_image, (256, 256))
     cv2_upload_image = cv2.cvtColor(cv2_upload_image, cv2.COLOR_RGB2BGR)
     character_image = cv2.imread(f"./image_data/Webtoon/{webtoon_title}_{character_name}.jpg", flags=cv2.IMREAD_COLOR)
-    anime_user_image = model_rs50.convert_type(st.session_state['anime_image'], TYPE=1, GRAY=False)
-    orb_knn_image = model_orb.run(anime_user_image, character_image, show=False)
+    anime_user_image = model_AE.convert_type_custom(st.session_state['anime_image'], TYPE=1, GRAY=False)
+    if orb_control == "On":
+        orb_knn_image = model_orb.run(anime_user_image, character_image, show=False)
+    elif orb_control == "Off":
+        orb_knn_image = model_orb.run(anime_user_image, character_image, ratio = 0.0, show=False)
     
     concatenate_image = np.concatenate([cv2_upload_image, orb_knn_image], axis=1)
     st.image(concatenate_image, use_column_width='always', caption=f"\"{webtoon_title}\"의 {character_name}와(과) {upload_image_name} 비교 결과")
@@ -152,4 +179,4 @@ if st.session_state['character_list']:
             st.markdown(f"- 성별   : {character_sex}")
             st.markdown(f"- 키워드 : {character_keyword}")
         
-        radar_chart(round(age_score * 100, 2), round(keyword_score * 100, 2), round(image_score * 100, 2))
+        radar_chart(round(age_score * 100, 2), round(keyword_score * 100, 2), round(image_score * 100, 2), round(total_score * 100, 2))
