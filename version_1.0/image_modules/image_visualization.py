@@ -60,10 +60,10 @@ class ORB:
 
         return image
 
-    def img_compare(self, image_1, image_2, color_image_1, color_image_2, ratio=0.75, show=False):
+    def img_compare(self, image_1, image_2, color_image_1, color_image_2, ratio=0.0, show=False):
         '''compare image'''
         # Initiate SIFT detector
-        orb = cv2.ORB_create()
+        orb = cv2.ORB_create(WTA_K=3)
 
         # find the keypoints and descriptors with SIFT
         kp1, des1 = orb.detectAndCompute(image_1, None)
@@ -79,21 +79,28 @@ class ORB:
         matches = sorted(matches, key = lambda x:x.distance)
 
         # BFMatcher with default params
-        bf = cv2.BFMatcher()
-        matches = bf.knnMatch(des1, des2, k=2)
+        bf = cv2.BFMatcher(cv2.NORM_HAMMING2)
+        matches = bf.knnMatch(des1, des2
+                              , k=2
+                             )
 
         # Apply ratio test
         good = []
-        for m,n in matches:
-            if m.distance < ratio * n.distance:
-                good.append([m])
+        try:
+            for m,n in matches:
+                print(m.distance, n.distance, sep=',', end=' | ')
+                if m.distance < ratio * n.distance:
+                    good.append([m])
+            print('-'*10)
+        except Exception as e:
+            print(e)
 
         # Draw first 10 matches.
         knn_image = cv2.drawMatchesKnn(color_image_1, kp1, color_image_2, kp2, good, None, flags=2)
         if show:
             plt.imshow(knn_image)
             plt.show()
-
+        print("B")
         return knn_image
 
     def img_show(self, image):
@@ -101,7 +108,7 @@ class ORB:
         plt.figure(figsize=(16, 10))
         plt.imshow(image)
 
-    def run(self, image_1, image_2, size = 256, padding = 0.65, ratio = 0.75, brightness = 0, contrast = 30, show=False):
+    def run(self, image_1, image_2, size = 256, padding = 0.65, ratio = 0.80, brightness = 0, contrast = 30, show=False):
         '''run compare image'''
         image_1 = self.img_to_rgb(image_1)
         image_1 = self.img_adjust(image_1, brightness=brightness, contrast=contrast)
@@ -119,6 +126,6 @@ class ORB:
         image_2 = self.img_to_bgr(image_2)
         image_2 = cv2.cvtColor(image_2, cv2.COLOR_BGR2GRAY)
 
-        knn_image = self.img_compare(image_1, image_2, color_image_1, color_image_2, ratio=0.75, show=show)
+        knn_image = self.img_compare(image_1, image_2, color_image_1, color_image_2, ratio=ratio, show=show)
 
         return knn_image
