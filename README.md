@@ -12,10 +12,13 @@
   - jupyter notebook
   - basic ML model used
   - Data : webtoon - 590 / Actor - 227
-- ProtoType_ver_0.2(2022.07.30 coming soon)
+- ProtoType_ver_0.2
   - modularity
   - inhanced ML model used
   - Data : webtoon - 590 / Actor - 1927
+- Version_1.0(8.11)
+  - inhanced DL model used
+  - streamlit
 
 
 
