@@ -109,6 +109,10 @@ try:
                 image_score = (model_AE.run(anime_user_image, character_image) - 0.7) / 0.3
                 if image_score < 0:
                     image_score = 0
+                if character_sex == upload_image_sex:
+                    sex_score = 1
+                else:
+                    sex_score = 0.5
                 total_score = (keyword_score * 0.2) + (image_score * 0.7) + (age_score * 0.1)
 
                 character_dict["Title"] = webtoon_title
@@ -119,6 +123,7 @@ try:
                 character_dict["Age_score"] = age_score
                 character_dict["Keyword_score"] = keyword_score
                 character_dict["Image_score"] = image_score
+                character_dict['Sex_score'] = sex_score
                 character_dict["Total_score"] = total_score
 
                 character_list.append(character_dict)
@@ -150,6 +155,7 @@ if st.session_state['character_list']:
     age_score = character_list[st.session_state["session_1"]]["Age_score"]
     keyword_score = character_list[st.session_state["session_1"]]["Keyword_score"]
     image_score = character_list[st.session_state["session_1"]]["Image_score"]
+    sex_score = character_list[st.session_state["session_1"]]["Sex_score"]
     total_score = character_list[st.session_state["session_1"]]["Total_score"]
     
     cv2_upload_image = cv2.cvtColor(np.array(st.session_state['upload_image']), cv2.COLOR_RGB2BGR)
@@ -179,4 +185,4 @@ if st.session_state['character_list']:
             st.markdown(f"- 성별   : {character_sex}")
             st.markdown(f"- 키워드 : {character_keyword}")
         
-        radar_chart(round(age_score * 100, 2), round(keyword_score * 100, 2), round(image_score * 100, 2), round(total_score * 100, 2))
+        radar_chart(round(age_score * 100, 2), round(keyword_score * 100, 2), round(image_score * 100, 2), round(total_score * 100, 2), round(sex_score * 100, 2))
